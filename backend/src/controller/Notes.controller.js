@@ -1,22 +1,52 @@
-export const getAllNotes = (req, res) => {
-    // Logic to get all notes
-    res.status(200).json({ message: 'Get all notes' });
+import Note from '../models/Note.model.js';
+export const getAllNotes =async (req, res) => {
+    const notes = await Note.find().sort({ createdAt: -1 });
+    
+    res.status(200).json(notes);
     }
 
-export const createNote = (req, res) => {
-    // Logic to create a new note
-    const newNote = req.body;
-    res.status(201).json({ message: 'Note created', note: newNote });
-}
-export const updateNote = (req, res) => {
-    // Logic to update a note
-    const noteId = req.params.id;
-    const updatedNote = req.body;
-    res.status(200).json({ message: `Note with ID ${noteId} updated`, note: updatedNote });
+export const getNoteById = async (req, res) => {
+    const noteId = await Note.findById(req.params.id);
+    if (!noteId) {
+        return res.status(404).json({ message: 'Note not found' });
+    }
+    res.status(200).json(noteId);
 }
 
-export const deleteNote = (req, res) => {
-    // Logic to delete a note
-    const noteId = req.params.id;
+export const createNote = async(req, res) => {
+  
+    const {title,content} = req.body;
+    const newNote = new Note({
+        title,
+        content
+    });
+    res.status(201).json(newNote);
+}
+export const updateNote = async(req, res) => {
+   try{
+    const {title, content} = req.body;
+    const updatedNote = await Note.findByIdAndUpdate(req.params.id,
+         {title, content}, {new: true});
+    if (!updatedNote) {
+        return res.status(404).json({ message: 'Note not found' });
+    }
+    res.status(200).json(updatedNote);
+}
+catch (error) {
+    console.error("error in updateNote", error)
+    res.status(500).json({ message: 'Error updating note', error });
+}
+}
+
+export const deleteNote = async(req, res) => {
+    try{
+    const noteId = await Note.findByIdAndDelete(req.params.id);
+    if (!noteId) {
+        return res.status(404).json({ message: 'Note not found' });
+    }
     res.status(200).json({ message: `Note with ID ${noteId} deleted` });
 }
+catch (error) {
+    console.error("error in deleteNote", error)
+    res.status(500).json({ message: 'Error deleting note', error });
+}}
